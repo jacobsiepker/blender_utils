@@ -180,15 +180,15 @@ class MESH_OT_rename(bpy.types.Operator):
     bl_label = 'Rename all selected objects'
     bl_options = {'REGISTER', 'UNDO'}
 
-    key_name: bpy.props.StringProperty(
+    newName: bpy.props.StringProperty(
         name = "New Object Name",
         description = "The name that will be given to all objects, with appended index"
     )
 
     def execute(self, context):
-        fileName = self.name
-
+        
         selectionObjects = []
+
         for obj in context.selected_objects:
             selectionObjects.append(obj)
 
@@ -198,7 +198,7 @@ class MESH_OT_rename(bpy.types.Operator):
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
 
-            obj.name = fileName + "_" + str(i)
+            obj.name = self.newName + "_" + str(i)
             i += 1
 
         for obj in selectionObjects:
