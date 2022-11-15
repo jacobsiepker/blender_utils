@@ -75,7 +75,7 @@ class MESH_OT_add_shape_key(bpy.types.Operator):
 
 class MESH_OT_remove_shape_key(bpy.types.Operator):
     bl_idname = 'mesh.remove_shape_key'
-    bl_label = 'Remove Shapne Key'
+    bl_label = 'Remove Shape Key'
     bl_options = {'REGISTER', 'UNDO'}
 
     key_name: bpy.props.StringProperty(
