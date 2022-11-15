@@ -38,6 +38,9 @@ class MESH_OT_prep_for_shapekey(bpy.types.Operator):
         for obj in duplicateObjects:
             obj.name = obj.name[:-4]
             obj.shape_key_add(from_mix=False, name="Basis")
+            
+            bpy.context.view_layer.objects.active = obj
+            bpy.context.object.data.uv_layers.active.name = "Basis"
             obj.select_set(True)
 
         return {'FINISHED'}
