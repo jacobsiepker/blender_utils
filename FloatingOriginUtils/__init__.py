@@ -68,6 +68,15 @@ class MESH_OT_add_shape_key(bpy.types.Operator):
             index = obj.data.shape_keys.key_blocks.find(shapeKeyName)
             obj.active_shape_key_index = index
 
+
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            bpy.ops.mesh.uv_texture_add()
+            bpy.context.object.data.uv_layers.active.name = shapeKeyName
+
+
         for obj in selectionObjects:
             obj.select_set(True)
 
@@ -186,7 +195,7 @@ class MESH_OT_rename(bpy.types.Operator):
     )
 
     def execute(self, context):
-        
+
         selectionObjects = []
 
         for obj in context.selected_objects:
