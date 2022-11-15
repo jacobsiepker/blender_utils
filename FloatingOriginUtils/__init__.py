@@ -12,7 +12,7 @@ bl_info = {
 
 import bpy
 
-
+#######################_DEFINE_OPERATORS_#######################
 class MESH_OT_prep_for_shapekey(bpy.types.Operator):
     bl_idname = 'mesh.prep_for_shapekey'
     bl_label = 'Prep for Shape Key'
@@ -175,6 +175,38 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class MESH_OT_rename(bpy.types.Operator):
+    bl_idname = 'mesh.batch_rename'
+    bl_label = 'Rename all selected objects'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    key_name: bpy.props.StringProperty(
+        name = "New Object Name",
+        description = "The name that will be given to all objects, with appended index"
+    )
+
+    def execute(self, context):
+        fileName = self.name
+
+        selectionObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+
+        i = 0
+        for obj in selectionObjects:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            obj.name = fileName + "_" + str(i)
+            i += 1
+
+        for obj in selectionObjects:
+            obj.select_set(True)
+
+        return {'FINISHED'}
+
+#######################_DRAW_UI_#######################
 class VIEW3D_PT_floating_origin_tool_ui(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -186,13 +218,16 @@ class VIEW3D_PT_floating_origin_tool_ui(bpy.types.Panel):
         self.layout.operator('mesh.add_shape_key')
         self.layout.operator('mesh.remove_shape_key')
         self.layout.operator('mesh.export_fbx')
+        self.layout.operator('mesh.batch_rename')
 
+#######################_REGISTER_CLASSES_#######################
 def register():
     bpy.utils.register_class(VIEW3D_PT_floating_origin_tool_ui)
     bpy.utils.register_class(MESH_OT_prep_for_shapekey)
     bpy.utils.register_class(MESH_OT_add_shape_key)
     bpy.utils.register_class(MESH_OT_remove_shape_key)
     bpy.utils.register_class(MESH_OT_export_fbx)
+    bpy.utils.register_class(MESH_OT_rename)
 
 def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tool_ui)
@@ -200,3 +235,4 @@ def unregister():
     bpy.utils.unregister_class(MESH_OT_add_shape_key)
     bpy.utils.unregister_class(MESH_OT_remove_shape_key)
     bpy.utils.unregister_class(MESH_OT_export_fbx)
+    bpy.utils.unregister_class(MESH_OT_rename)
