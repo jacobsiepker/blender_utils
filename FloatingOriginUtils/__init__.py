@@ -68,7 +68,6 @@ class MESH_OT_add_shape_key(bpy.types.Operator):
             index = obj.data.shape_keys.key_blocks.find(shapeKeyName)
             obj.active_shape_key_index = index
 
-
             bpy.ops.object.select_all(action='DESELECT')
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
@@ -106,7 +105,7 @@ class MESH_OT_remove_shape_key(bpy.types.Operator):
             
         for obj in selectionObjects:
             if not deleteAll:
-                index = obj.data.shape_keys.key_blocks.find(shapeKeyName)
+                index = obj.data.shape_keys.key_blocks.find(shapeKeyName)  ##THROWS ERROR WHEN NO SHAPE KEY EXISTS ON OBJECT
                 obj.active_shape_key_index = index
                 if obj.active_shape_key != None:
                     obj.shape_key_remove(key=obj.active_shape_key)
@@ -186,7 +185,7 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 
 class MESH_OT_rename(bpy.types.Operator):
     bl_idname = 'mesh.batch_rename'
-    bl_label = 'Rename all selected objects'
+    bl_label = 'Rename'
     bl_options = {'REGISTER', 'UNDO'}
 
     newName: bpy.props.StringProperty(
