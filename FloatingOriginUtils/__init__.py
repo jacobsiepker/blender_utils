@@ -38,7 +38,7 @@ class MESH_OT_prep_for_shapekey(bpy.types.Operator):
         for obj in duplicateObjects:
             obj.name = obj.name[:-4]
             obj.shape_key_add(from_mix=False, name="Basis")
-            
+
             bpy.context.view_layer.objects.active = obj
             bpy.context.object.data.uv_layers.active.name = "Basis"
             obj.select_set(True)
@@ -174,6 +174,21 @@ class MESH_OT_export_fbx(bpy.types.Operator):
             obj2.location[2] = 0
 
             bpy.ops.object.transform_apply(location=True, rotation = True, scale = True)
+
+            ##REWORK EVERYTHING FROM HERE, TO THE RETURN
+
+            objVariants = []
+            #For each shape key (by name, get UV Map too)
+            for shapeKey in obj2.data.shape_keys:
+                bpy.context.view_layer.objects.active = obj2
+                bpy.ops.object.duplicate()
+                #Duplicate
+                #Remove all other Shape Keys/UV's
+                #append _ShapeKeyName to mesh
+                #add to objVariants
+            #Export
+            #For each obj in objVariants. delete
+
 
             #Export FBX File
             bpy.ops.object.select_all(action='DESELECT')
