@@ -205,7 +205,7 @@ class MESH_OT_deselect_all_lod(bpy.types.Operator):
             selectionPrefix.append(obj.name[:-5])
 
         for obj in bpy.data.objects:
-            if obj.name[-5:].lower() == "_lod"+str(self.keepSelected):
+            if obj.name[:-5] in selectionPrefix and obj.name[-5:].lower() == "_lod"+str(self.keepSelected):
                 obj.hide_set(False)
                 obj.select_set(True)
             elif obj.name[:-5] in selectionPrefix:
