@@ -172,6 +172,48 @@ class MESH_OT_add_lod(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class MESH_OT_select_all_lod(bpy.types.Operator):
+    bl_idname = 'mesh.select_lod'
+    bl_label = 'Select All LOD'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        selectionPrefix = []
+        for obj in context.selected_objects:
+            selectionPrefix.append(obj.name[:-5])
+
+        for obj in bpy.data.objects:
+            if obj.name[:-5] in selectionPrefix:
+                obj.hide_set(False)
+                obj.select_set(True)
+
+        return {'FINISHED'}
+
+class MESH_OT_deselect_all_lod(bpy.types.Operator):
+    bl_idname = 'mesh.deselect_lod'
+    bl_label = 'Deselect All LODs'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    keepSelected: bpy.props.IntProperty(
+        name = "LOD to Keep",
+        description = "The LOD to keep visible and selected"
+    )
+
+    def execute(self, context):
+        selectionPrefix = []
+        for obj in context.selected_objects:
+            selectionPrefix.append(obj.name[:-5])
+
+        for obj in bpy.data.objects:
+            if obj.name[-5:].lower() == "_lod"+str(self.keepSelected):
+                obj.hide_set(False)
+                obj.select_set(True)
+            elif obj.name[:-5] in selectionPrefix:
+                obj.hide_set(True)
+                obj.select_set(False)
+
+        return {'FINISHED'}
+
 class MESH_OT_export_fbx(bpy.types.Operator):
     bl_idname = 'mesh.export_fbx'
     bl_label = 'Export FBX'
@@ -313,6 +355,8 @@ class VIEW3D_PT_floating_origin_tool_ui(bpy.types.Panel):
         self.layout.operator('mesh.add_shape_key')
         self.layout.operator('mesh.remove_shape_key')
         self.layout.operator('mesh.add_lod')
+        self.layout.operator('mesh.select_lod')
+        self.layout.operator('mesh.deselect_lod')
         self.layout.operator('mesh.export_fbx')
 
 #######################_REGISTER_CLASSES_#######################
@@ -324,6 +368,8 @@ def register():
     bpy.utils.register_class(MESH_OT_export_fbx)
     bpy.utils.register_class(MESH_OT_rename)
     bpy.utils.register_class(MESH_OT_add_lod)
+    bpy.utils.register_class(MESH_OT_select_all_lod)
+    bpy.utils.register_class(MESH_OT_deselect_all_lod)
 
 def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tool_ui)
@@ -333,3 +379,5 @@ def unregister():
     bpy.utils.unregister_class(MESH_OT_export_fbx)
     bpy.utils.unregister_class(MESH_OT_rename)
     bpy.utils.unregister_class(MESH_OT_add_lod)
+    bpy.utils.unregister_class(MESH_OT_select_all_lod)
+    bpy.utils.unregister_class(MESH_OT_deselect_all_lod)
