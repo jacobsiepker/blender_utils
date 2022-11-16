@@ -128,6 +128,49 @@ class MESH_OT_remove_shape_key(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class MESH_OT_add_lod(bpy.types.Operator):
+    bl_idname = 'mesh.add_lod'
+    bl_label = 'Add LOD'
+    bl_options = {'REGISTER', 'UNDO'}
+
+
+    def execute(self, context):
+        selectionObjects = []
+        lodObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+
+        for obj in selectionObjects:
+            #Set selection
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            #Duplicate Object, Rename Copy
+            bpy.ops.object.duplicate()
+            obj2 = bpy.context.object
+
+            #Naming Convention
+            collectionName = obj.name
+            if obj.name[-5:-1].lower() == "_lod":
+                level = eval(collectionName[-1])
+                obj2.name = collectionName[:-1] + str(level+1)
+            else:
+                obj.name = collectionName + "_lod0"
+                obj2.name = collectionName + "_lod1"
+            
+            lodObjects.append(obj2)
+
+            bpy.ops.object.select_all(action='DESELECT')
+
+            #Could add LOD levels to a collection with the same object name here
+
+            obj.hide_set(True)
+
+        for obj in lodObjects:
+            obj.select_set(True)
+
+        return {'FINISHED'}
 
 class MESH_OT_export_fbx(bpy.types.Operator):
     bl_idname = 'mesh.export_fbx'
@@ -265,11 +308,12 @@ class VIEW3D_PT_floating_origin_tool_ui(bpy.types.Panel):
     bl_label = 'Pipeline Scripts'
 
     def draw (self, context):
+        self.layout.operator('mesh.batch_rename')
         self.layout.operator('mesh.prep_for_shapekey')
         self.layout.operator('mesh.add_shape_key')
         self.layout.operator('mesh.remove_shape_key')
+        self.layout.operator('mesh.add_lod')
         self.layout.operator('mesh.export_fbx')
-        self.layout.operator('mesh.batch_rename')
 
 #######################_REGISTER_CLASSES_#######################
 def register():
@@ -279,6 +323,7 @@ def register():
     bpy.utils.register_class(MESH_OT_remove_shape_key)
     bpy.utils.register_class(MESH_OT_export_fbx)
     bpy.utils.register_class(MESH_OT_rename)
+    bpy.utils.register_class(MESH_OT_add_lod)
 
 def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tool_ui)
@@ -287,3 +332,4 @@ def unregister():
     bpy.utils.unregister_class(MESH_OT_remove_shape_key)
     bpy.utils.unregister_class(MESH_OT_export_fbx)
     bpy.utils.unregister_class(MESH_OT_rename)
+    bpy.utils.unregister_class(MESH_OT_add_lod)
