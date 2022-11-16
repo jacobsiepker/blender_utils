@@ -154,49 +154,74 @@ class MESH_OT_export_fbx(bpy.types.Operator):
         for obj in context.selected_objects:
             selectionObjects.append(obj)
 
-        i = 0
         for obj in selectionObjects:
+            tempObjects = []
+            i = 0
 
-            #Set obj as Selected and Active
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
+            if obj.data.shape_keys == None:
+                obj.shape_key_add(from_mix=False, name="Basis")
+                bpy.context.view_layer.objects.active = obj
+                bpy.context.object.data.uv_layers.active.name = "Basis"
 
-            #Duplicate Object, Rename Copy
-            bpy.ops.object.duplicate()
-            obj2 = bpy.context.object
-            obj2.name = "TEMP_EXPORT_OBJECT_" + str(i)
-            i+=1
+            stopIter = False
+            i=0
+            keyList = []
+            while not stopIter:
+                #Get names of all key shapes
+                obj.active_shape_key_index = i
+                if obj.active_shape_key == None:
+                    stopIter = True
+                else:
+                    keyList.append(obj.active_shape_key.name)
+                    i+=1
 
-            #Bring to Origin, Apply Transforms
-            obj2.location[0] = 0
-            obj2.location[1] = 0
-            obj2.location[2] = 0
+            for keyName in keyList:
+                #Set current key as active
+                index = obj.data.shape_keys.key_blocks.find(keyName)
+                obj.active_shape_key_index = index
 
-            bpy.ops.object.transform_apply(location=True, rotation = True, scale = True)
+                #Set obj as Selected and Active
+                bpy.ops.object.select_all(action='DESELECT')
+                obj.select_set(True)
+                bpy.context.view_layer.objects.active = obj
 
-            ##REWORK EVERYTHING FROM HERE, TO THE RETURN
-
-            objVariants = []
-            #For each shape key (by name, get UV Map too)
-            for shapeKey in obj2.data.shape_keys:
-                bpy.context.view_layer.objects.active = obj2
+                #Duplicate Object, Rename Copy
                 bpy.ops.object.duplicate()
-                #Duplicate
-                #Remove all other Shape Keys/UV's
-                #append _ShapeKeyName to mesh
-                #add to objVariants
-            #Export
-            #For each obj in objVariants. delete
+                obj2 = bpy.context.object
+                obj2.name = f"{obj.name}_blend_{keyName}"
+                i+=1
 
+                #Remove Shape Keys that Do Not Match
+                #May need to get list of items to remove on first pass, then call remove
+                for shapeKeyRemove in keyList:
+                    if shapeKeyRemove != keyName:
+                        index = obj2.data.shape_keys.key_blocks.find(shapeKeyRemove)
+                        obj2.active_shape_key_index = index
+                        obj2.shape_key_remove(key=obj2.active_shape_key)
 
-            #Export FBX File
+                #Remove UV Maps that do no match
+                #Currently not implemented, not necessary
+                #Could save some object disc size
+
+                #Bring to Origin, Apply Transforms
+                obj2.location[0] = 0
+                obj2.location[1] = 0
+                obj2.location[2] = 0
+
+                with bpy.context.temp_override(active_object=obj2):
+                    bpy.ops.object.transform_apply(location=True, rotation = True, scale = True)
+                    bpy.ops.object.convert(target='MESH', keep_original=False)
+
+                tempObjects.append(obj2)
+
+            #Select all temp objects
             bpy.ops.object.select_all(action='DESELECT')
-            obj2.select_set(True)
+            for tempObj in tempObjects:
+                tempObj.select_set(True)
             outputFile = filePath + obj.name + ".fbx" 
             bpy.ops.export_scene.fbx(filepath=outputFile, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'})
 
-            #Delete Copy
+            #Delete Temp Objects
             bpy.ops.object.delete(use_global=False, confirm=False)
 
         return {'FINISHED'}
