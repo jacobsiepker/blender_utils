@@ -304,7 +304,7 @@ class MESH_OT_export_fbx(bpy.types.Operator):
             for tempObj in tempObjects:
                 tempObj.select_set(True)
             outputFile = filePath + obj.name + ".fbx" 
-            bpy.ops.export_scene.fbx(filepath=outputFile, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'})
+            bpy.ops.export_scene.fbx(filepath=outputFile, use_mesh_edges=True, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'})
 
             #Delete Temp Objects
             bpy.ops.object.delete(use_global=False, confirm=False)
