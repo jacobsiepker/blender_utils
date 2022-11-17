@@ -332,14 +332,35 @@ class MESH_OT_rename(bpy.types.Operator):
             selectionObjects.append(obj)
 
         i = 0
+
         for obj in selectionObjects:
             bpy.ops.object.select_all(action='DESELECT')
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
 
-            obj.name = self.newName + "_" + str(i)
-            i += 1
+            name_split = obj.name.split("_")
+            nameEnding = ''
 
+            for namePart in name_split:
+                if namePart[:9].lower() == "modifiers":
+                    nameEnding += "_modifiers"
+                    
+                elif namePart[:3].lower() == "lod":
+                    nameEnding += '_' + namePart
+                
+                else:
+                    try:
+                        if -1 < eval(namePart) < 1000:
+                            nameEnding+= "_" + namePart
+                    except:
+                        pass
+
+            if nameEnding == '':
+                obj.name = self.newName + '_' + str(i)
+                i += 1
+            else:
+                obj.name = self.newName + nameEnding
+            
         for obj in selectionObjects:
             obj.select_set(True)
 
