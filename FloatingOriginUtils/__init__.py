@@ -273,7 +273,10 @@ class MESH_OT_export_fbx(bpy.types.Operator):
                 #Duplicate Object, Rename Copy
                 bpy.ops.object.duplicate()
                 obj2 = bpy.context.object
-                obj2.name = f"{obj.name}_blend_{keyName}"
+                if keyName.lower() != "basis":
+                    obj2.name = f"{obj.name}_blend_{keyName}"
+                else:
+                    obj2.name = f"{obj.name}_Basis"
                 i+=1
 
                 #Remove Shape Keys that Do Not Match
