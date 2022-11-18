@@ -114,3 +114,39 @@ class MESH_OT_remove_shape_key(bpy.types.Operator):
                         i += 1
 
         return {'FINISHED'}
+
+
+class MESH_OT_test_shape_key(bpy.types.Operator):
+    bl_idname = 'mesh.test_shape_key'
+    bl_label = 'Test Shape Keys'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    key_name: bpy.props.StringProperty(
+        name = "Shape Key Name",
+        description = "The name of the shape key that will be modified for all selected objects"
+    )
+    value: bpy.props.FloatProperty(
+        name = "Value",
+        description = "The value to be set on all matching shape keys"
+    )
+
+    def execute(self, context):
+        selectionObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+        
+        for obj in selectionObjects:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            if obj.data.shape_keys != None:
+                index = obj.data.shape_keys.key_blocks.find(self.key_name)  ##THROWS ERROR WHEN NO SHAPE KEY EXISTS ON OBJECT
+                obj.active_shape_key_index = index
+                if obj.active_shape_key != None:
+                    obj.active_shape_key.value = self.value
+
+        
+        for obj in selectionObjects:
+            obj.select_set(True)
+
+        return {'FINISHED'}
