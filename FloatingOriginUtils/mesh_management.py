@@ -63,27 +63,23 @@ class MESH_OT_copy_origin(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
-#TODO: Bring to Active
 class MESH_OT_bring_to_active(bpy.types.Operator):
     bl_idname = 'mesh.bring_to_active'
-    bl_label = 'Move each selected object to the active object'
+    bl_label = 'Bring to Active'
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        selectionObjects = []
-        #get active object
-        #get active object origin
+        #Get selected objects
+        selectedObjects = []
+        activeObj = bpy.context.view_layer.objects.active
+
         for obj in context.selected_objects:
-            selectionObjects.append(obj)
+            selectedObjects.append(obj)
 
-        for obj in selectionObjects:
-            pass
-            #move objects to this object
+        #Set each objects location
+        for obj in selectedObjects:
+            obj.location = activeObj.location
         
-        for obj in selectionObjects:
-            obj.set_select(True)
-
         return {'FINISHED'}
 
 
@@ -276,7 +272,7 @@ class MESH_OT_build_collider(bpy.types.Operator):
         return {'FINISHED'}
     
         #MODEL MESH
-        #PREP FOR SHAPE KEY
+        #PREP FOR SHAPE K.7EY
         #SETUP SHAPE KEYS
 
         #SET NORMALS
