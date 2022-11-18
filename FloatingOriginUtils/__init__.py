@@ -11,397 +11,66 @@ bl_info = {
 }
 
 import bpy
-
-#######################_DEFINE_OPERATORS_#######################
-class MESH_OT_prep_for_shapekey(bpy.types.Operator):
-    bl_idname = 'mesh.prep_for_shapekey'
-    bl_label = 'Prep for Shape Key'
-    bl_options = {'REGISTER', 'UNDO'}
-
-
-    def execute(self, context):
-        selectionObjects = []
-        duplicateObjects = []
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        for obj in selectionObjects:
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-
-            with bpy.context.temp_override(active_object=obj):
-                bpy.ops.object.convert(target='MESH', keep_original=True)
-            duplicateObjects.append(context.active_object)
-            obj.name = obj.name + "_modifiers"
-            obj.hide_set(True)
-
-        for obj in duplicateObjects:
-            obj.name = obj.name[:-4]
-            obj.shape_key_add(from_mix=False, name="Basis")
-
-            bpy.context.view_layer.objects.active = obj
-            bpy.context.object.data.uv_layers.active.name = "Basis"
-            obj.select_set(True)
-
-        return {'FINISHED'}
-
-
-class MESH_OT_add_shape_key(bpy.types.Operator):
-    bl_idname = 'mesh.add_shape_key'
-    bl_label = 'Add Shape Key'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    key_name: bpy.props.StringProperty(
-        name = "Shape Key Name",
-        description = "The name of the shape key that will be applied to all selected objects"
-    )
-
-    def execute(self, context):
-        shapeKeyName = self.key_name
-
-        selectionObjects = []
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        for obj in selectionObjects:
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-
-            obj.shape_key_add(from_mix=False, name=shapeKeyName)
-            index = obj.data.shape_keys.key_blocks.find(shapeKeyName)
-            obj.active_shape_key_index = index
-
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-
-            bpy.ops.mesh.uv_texture_add()
-            bpy.context.object.data.uv_layers.active.name = shapeKeyName
-
-
-        for obj in selectionObjects:
-            obj.select_set(True)
-
-        return {'FINISHED'}
-
-class MESH_OT_remove_shape_key(bpy.types.Operator):
-    bl_idname = 'mesh.remove_shape_key'
-    bl_label = 'Remove Shape Key'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    key_name: bpy.props.StringProperty(
-        name = "Shape Key Name",
-        description = "The name of the shape key that will be deleted from all selected objects"
-    )
-    delete_all: bpy.props.BoolProperty(
-        name = "Delete All",
-        description = "Enable to destry all non-basis shape keys"
-    )
-
-    def execute(self, context):
-        shapeKeyName = self.key_name
-        deleteAll = self.delete_all
-
-        selectionObjects = []
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-            
-        for obj in selectionObjects:
-            if not deleteAll:
-                index = obj.data.shape_keys.key_blocks.find(shapeKeyName)  ##THROWS ERROR WHEN NO SHAPE KEY EXISTS ON OBJECT
-                obj.active_shape_key_index = index
-                if obj.active_shape_key != None:
-                    obj.shape_key_remove(key=obj.active_shape_key)
-            else:
-                i = 0
-                while True:
-                    obj.active_shape_key_index = i
-                    
-                    if obj.active_shape_key == None:
-                        break
-                    
-                    if obj.active_shape_key.name != "Basis":
-                        obj.shape_key_remove(key=obj.active_shape_key)
-                    
-                    else:
-                        i += 1
-
-        return {'FINISHED'}
-
-class MESH_OT_add_lod(bpy.types.Operator):
-    bl_idname = 'mesh.add_lod'
-    bl_label = 'Add LOD'
-    bl_options = {'REGISTER', 'UNDO'}
-
-
-    def execute(self, context):
-        selectionObjects = []
-        lodObjects = []
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        for obj in selectionObjects:
-            #Set selection
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-
-            #Duplicate Object, Rename Copy
-            bpy.ops.object.duplicate()
-            obj2 = bpy.context.object
-
-            #Naming Convention
-            collectionName = obj.name
-            if obj.name[-5:-1].lower() == "_lod":
-                level = eval(collectionName[-1])
-                obj2.name = collectionName[:-1] + str(level+1)
-            else:
-                obj.name = collectionName + "_lod0"
-                obj2.name = collectionName + "_lod1"
-            
-            lodObjects.append(obj2)
-
-            bpy.ops.object.select_all(action='DESELECT')
-
-            #Could add LOD levels to a collection with the same object name here
-
-            obj.hide_set(True)
-
-        for obj in lodObjects:
-            obj.select_set(True)
-
-        return {'FINISHED'}
-
-class MESH_OT_select_all_lod(bpy.types.Operator):
-    bl_idname = 'mesh.select_lod'
-    bl_label = 'Select All LOD'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        selectionPrefix = []
-        for obj in context.selected_objects:
-            selectionPrefix.append(obj.name[:-5])
-
-        for obj in bpy.data.objects:
-            if obj.name[:-5] in selectionPrefix:
-                obj.hide_set(False)
-                obj.select_set(True)
-
-        return {'FINISHED'}
-
-class MESH_OT_deselect_all_lod(bpy.types.Operator):
-    bl_idname = 'mesh.deselect_lod'
-    bl_label = 'Deselect All LODs'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    keepSelected: bpy.props.IntProperty(
-        name = "LOD to Keep",
-        description = "The LOD to keep visible and selected"
-    )
-
-    def execute(self, context):
-        selectionPrefix = []
-        for obj in context.selected_objects:
-            selectionPrefix.append(obj.name[:-5])
-
-        for obj in bpy.data.objects:
-            if obj.name[:-5] in selectionPrefix and obj.name[-5:].lower() == "_lod"+str(self.keepSelected):
-                obj.hide_set(False)
-                obj.select_set(True)
-            elif obj.name[:-5] in selectionPrefix:
-                obj.hide_set(True)
-                obj.select_set(False)
-
-        return {'FINISHED'}
-
-class MESH_OT_export_fbx(bpy.types.Operator):
-    bl_idname = 'mesh.export_fbx'
-    bl_label = 'Export FBX'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    file_path: bpy.props.StringProperty(
-        name = "Output Location",
-        description = "The filepath of the FBX"
-    )
-
-
-    def execute(self, context):
-        filePath = self.file_path
-        defaultPath = "S:/FloatingOrigin/local_source/temp_fbx_output"
-
-        selectionObjects = []
-
-        if filePath == None or filePath == '':
-            filePath = defaultPath
-        if filePath[-1] != '/':
-            filePath += '/'
-
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        for obj in selectionObjects:
-            tempObjects = []
-            i = 0
-
-            if obj.data.shape_keys == None:
-                obj.shape_key_add(from_mix=False, name="Basis")
-                bpy.context.view_layer.objects.active = obj
-                bpy.context.object.data.uv_layers.active.name = "Basis"
-
-            stopIter = False
-            i=0
-            keyList = []
-            while not stopIter:
-                #Get names of all key shapes
-                obj.active_shape_key_index = i
-                if obj.active_shape_key == None:
-                    stopIter = True
-                else:
-                    keyList.append(obj.active_shape_key.name)
-                    i+=1
-
-            for keyName in keyList:
-                #Set current key as active
-                index = obj.data.shape_keys.key_blocks.find(keyName)
-                obj.active_shape_key_index = index
-
-                #Set obj as Selected and Active
-                bpy.ops.object.select_all(action='DESELECT')
-                obj.select_set(True)
-                bpy.context.view_layer.objects.active = obj
-
-                #Duplicate Object, Rename Copy
-                bpy.ops.object.duplicate()
-                obj2 = bpy.context.object
-                if keyName.lower() != "basis":
-                    obj2.name = f"{obj.name}_blend_{keyName}"
-                else:
-                    obj2.name = f"{obj.name}_Basis"
-                i+=1
-
-                #Remove Shape Keys that Do Not Match
-                #May need to get list of items to remove on first pass, then call remove
-                for shapeKeyRemove in keyList:
-                    if shapeKeyRemove != keyName:
-                        index = obj2.data.shape_keys.key_blocks.find(shapeKeyRemove)
-                        obj2.active_shape_key_index = index
-                        obj2.shape_key_remove(key=obj2.active_shape_key)
-
-                #Remove UV Maps that do no match
-                #Currently not implemented, not necessary
-                #Could save some object disc size
-
-                #Bring to Origin, Apply Transforms
-                obj2.location[0] = 0
-                obj2.location[1] = 0
-                obj2.location[2] = 0
-
-                with bpy.context.temp_override(active_object=obj2):
-                    bpy.ops.object.transform_apply(location=True, rotation = True, scale = True)
-                    bpy.ops.object.convert(target='MESH', keep_original=False)
-
-                tempObjects.append(obj2)
-
-            #Select all temp objects
-            bpy.ops.object.select_all(action='DESELECT')
-            for tempObj in tempObjects:
-                tempObj.select_set(True)
-            outputFile = filePath + obj.name + ".fbx" 
-            bpy.ops.export_scene.fbx(filepath=outputFile, use_mesh_edges=True, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'})
-
-            #Delete Temp Objects
-            bpy.ops.object.delete(use_global=False, confirm=False)
-
-        return {'FINISHED'}
-
-class MESH_OT_rename(bpy.types.Operator):
-    bl_idname = 'mesh.batch_rename'
-    bl_label = 'Rename'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    newName: bpy.props.StringProperty(
-        name = "New Object Name",
-        description = "The name that will be given to all objects, with appended index"
-    )
-
-    def execute(self, context):
-
-        selectionObjects = []
-
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        i = 0
-
-        for obj in selectionObjects:
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-
-            name_split = obj.name.split("_")
-            nameEnding = ''
-
-            for namePart in name_split:
-                if namePart[:9].lower() == "modifiers":
-                    nameEnding += "_modifiers"
-                    
-                elif namePart[:3].lower() == "lod":
-                    nameEnding += '_' + namePart
-                
-                else:
-                    try:
-                        if -1 < eval(namePart) < 1000:
-                            nameEnding+= "_" + namePart
-                    except:
-                        pass
-
-            if nameEnding == '':
-                obj.name = self.newName + '_' + str(i)
-                i += 1
-            else:
-                obj.name = self.newName + nameEnding
-            
-        for obj in selectionObjects:
-            obj.select_set(True)
-
-        return {'FINISHED'}
+from . import view_3D_LOD_manager
+from . import view_3D_bulk_shape_key
+from . import scene_management
 
 #######################_DRAW_UI_#######################
-class VIEW3D_PT_floating_origin_tool_ui(bpy.types.Panel):
+class VIEW3D_PT_floating_origin_tools_shape_key(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Floating Origin Tools'
-    bl_label = 'Pipeline Scripts'
+    bl_label = 'Shape Keys'
 
     def draw (self, context):
-        self.layout.operator('mesh.batch_rename')
         self.layout.operator('mesh.prep_for_shapekey')
         self.layout.operator('mesh.add_shape_key')
         self.layout.operator('mesh.remove_shape_key')
+
+class VIEW3D_PT_floating_origin_tools_lod(bpy.types.Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Floating Origin Tools'
+    bl_label = 'LOD'
+
+    def draw (self, context):
         self.layout.operator('mesh.add_lod')
         self.layout.operator('mesh.select_lod')
         self.layout.operator('mesh.deselect_lod')
+
+class VIEW3D_PT_floating_origin_tools_scene_management(bpy.types.Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Floating Origin Tools'
+    bl_label = 'Scene Management'
+
+    def draw (self, context):
+        self.layout.operator('mesh.batch_rename')
         self.layout.operator('mesh.export_fbx')
 
 #######################_REGISTER_CLASSES_#######################
 def register():
-    bpy.utils.register_class(VIEW3D_PT_floating_origin_tool_ui)
-    bpy.utils.register_class(MESH_OT_prep_for_shapekey)
-    bpy.utils.register_class(MESH_OT_add_shape_key)
-    bpy.utils.register_class(MESH_OT_remove_shape_key)
-    bpy.utils.register_class(MESH_OT_export_fbx)
-    bpy.utils.register_class(MESH_OT_rename)
-    bpy.utils.register_class(MESH_OT_add_lod)
-    bpy.utils.register_class(MESH_OT_select_all_lod)
-    bpy.utils.register_class(MESH_OT_deselect_all_lod)
+    bpy.utils.register_class(VIEW3D_PT_floating_origin_tools_shape_key)
+    bpy.utils.register_class(VIEW3D_PT_floating_origin_tools_lod)
+    bpy.utils.register_class(VIEW3D_PT_floating_origin_tools_scene_management)
+    bpy.utils.register_class(view_3D_bulk_shape_key.MESH_OT_prep_for_shapekey)
+    bpy.utils.register_class(view_3D_bulk_shape_key.MESH_OT_add_shape_key)
+    bpy.utils.register_class(view_3D_bulk_shape_key.MESH_OT_remove_shape_key)
+    bpy.utils.register_class(scene_management.MESH_OT_export_fbx)
+    bpy.utils.register_class(scene_management.MESH_OT_rename)
+    bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_add_lod)
+    bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_select_all_lod)
+    bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
 
 def unregister():
-    bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tool_ui)
-    bpy.utils.unregister_class(MESH_OT_prep_for_shapekey)
-    bpy.utils.unregister_class(MESH_OT_add_shape_key)
-    bpy.utils.unregister_class(MESH_OT_remove_shape_key)
-    bpy.utils.unregister_class(MESH_OT_export_fbx)
-    bpy.utils.unregister_class(MESH_OT_rename)
-    bpy.utils.unregister_class(MESH_OT_add_lod)
-    bpy.utils.unregister_class(MESH_OT_select_all_lod)
-    bpy.utils.unregister_class(MESH_OT_deselect_all_lod)
+    bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tools_shape_key)
+    bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tools_lod)
+    bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tools_scene_management)
+    bpy.utils.unregister_class(view_3D_bulk_shape_key.MESH_OT_prep_for_shapekey)
+    bpy.utils.unregister_class(view_3D_bulk_shape_key.MESH_OT_add_shape_key)
+    bpy.utils.unregister_class(view_3D_bulk_shape_key.MESH_OT_remove_shape_key)
+    bpy.utils.unregister_class(scene_management.MESH_OT_export_fbx)
+    bpy.utils.unregister_class(scene_management.MESH_OT_rename)
+    bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_add_lod)
+    bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_select_all_lod)
+    bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
