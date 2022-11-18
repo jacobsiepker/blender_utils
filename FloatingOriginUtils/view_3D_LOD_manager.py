@@ -49,21 +49,55 @@ class MESH_OT_select_all_lod(bpy.types.Operator):
     bl_label = 'Select All LOD'
     bl_options = {'REGISTER', 'UNDO'}
 
+    select_colliders: bpy.props.BoolProperty(
+        name = "Include Colliders",
+        description = "Enable to select collider."
+    )
+    select_modifiers: bpy.props.BoolProperty(
+        name = "Include Modifiers",
+        description = "Enable to include mesh with modifiers"
+    )
+
     def execute(self, context):
         selectionPrefix = []
         for obj in context.selected_objects:
-            selectionPrefix.append(obj.name[:-5])
+            nameSplit = obj.name.split('_')
+            thisSelectionPrefix = ''
+            for namePart in nameSplit:
+                if namePart != nameSplit[-1]:
+                    thisSelectionPrefix += namePart + '_'
+            selectionPrefix.append(thisSelectionPrefix)
 
+        activeObject = None
         for obj in bpy.data.objects:
-            if obj.name[:-5] in selectionPrefix:
-                obj.hide_set(False)
-                obj.select_set(True)
+
+            matches = False
+            matchingPrefix = None
+            for prefix in selectionPrefix:
+                if prefix in obj.name:
+                    matches = True
+
+            if matches:
+                select = False
+                if obj.name.split('_')[-1].lower() == 'modifiers' and self.select_modifiers:
+                    select = True
+                elif obj.name.split('_')[-1].lower() == 'collider' and self.select_colliders:
+                    select = True
+                elif obj.name.split('_')[-1].lower()[:3] == 'lod':
+                    select = True
+
+                if select:
+                    obj.hide_set(False)
+                    obj.select_set(True)
+                    activeObject = obj
+
+        bpy.context.view_layer.objects.active = activeObject
 
         return {'FINISHED'}
 
 class MESH_OT_deselect_all_lod(bpy.types.Operator):
     bl_idname = 'mesh.deselect_lod'
-    bl_label = 'Deselect All LODs'
+    bl_label = 'Select Mesh Version'
     bl_options = {'REGISTER', 'UNDO'}
 
     keepSelected: bpy.props.IntProperty(
@@ -74,17 +108,38 @@ class MESH_OT_deselect_all_lod(bpy.types.Operator):
     def execute(self, context):
         selectionPrefix = []
         for obj in context.selected_objects:
-            selectionPrefix.append(obj.name[:-5])
+            nameSplit = obj.name.split('_')
+            thisSelectionPrefix = ''
+            for namePart in nameSplit:
+                if namePart != nameSplit[-1]:
+                    thisSelectionPrefix += namePart + '_'
+            selectionPrefix.append(thisSelectionPrefix)
+
+        keep_selected = self.keepSelected
+        if self.keepSelected == -1:
+            keep_selected = "collider"
+        elif self.keepSelected == -2:
+            keep_selected = "modifiers"
+        else:
+            keep_selected = "lod" + str(self.keepSelected)
 
         activeObject = None
         for obj in bpy.data.objects:
-            if obj.name[:-5] in selectionPrefix and obj.name[-5:].lower() == "_lod"+str(self.keepSelected):
+
+            matches = False
+            for prefix in selectionPrefix:
+                if prefix in obj.name:
+                    matches = True
+
+            if matches and obj.name.split('_')[-1].lower() == keep_selected:
                 obj.hide_set(False)
                 obj.select_set(True)
                 activeObject = obj
-            elif obj.name[:-5] in selectionPrefix:
+
+            elif matches:
                 obj.hide_set(True)
                 obj.select_set(False)
+
         bpy.context.view_layer.objects.active = activeObject
         return {'FINISHED'}
 

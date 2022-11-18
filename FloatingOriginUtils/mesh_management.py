@@ -164,10 +164,36 @@ class MESH_OT_remove_doubles(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#TODO: Smart UV Unwrap
 class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
-    bl_idname = 'mesh.smart_uv_unwrap'
+    bl_idname = 'mesh.batch_uv_unwrap'
     bl_label = 'Smart UV Unwrap'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        selectionObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+
+        for obj in selectionObjects:
+            #Set selection
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            bpy.ops.object.mode_set(mode = 'EDIT')
+            bpy.ops.uv.smart_project(island_margin=0.005)
+            bpy.ops.object.mode_set(mode = 'OBJECT')
+            
+        
+        for obj in selectionObjects:
+            obj.select_set(True)
+
+        return {'FINISHED'}
+
+#TODO: Set Normals
+class MESH_OT_set_normals(bpy.types.Operator):
+    bl_idname = 'mesh.set_normals'
+    bl_label = 'Set Normals'
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -186,17 +212,78 @@ class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class MESH_OT_build_collider(bpy.types.Operator):
+    bl_idname = 'mesh.build_collider'
+    bl_label = 'Build Collider'
+    bl_options = {'REGISTER', 'UNDO'}
 
+    decimate_ratio: bpy.props.FloatProperty(
+        name = "Decimate Ratio",
+        description = "The ratio of decimation"
+    )
+
+    disolve_angle: bpy.props.FloatProperty(
+        name = "Disolve Angle",
+        description = "The ratio of decimation"
+    )
+
+    def execute(self, context):
+        selectionObjects = []
+        colliderObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+
+        for obj in selectionObjects:
+            #Set selection
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            #Duplicate Object
+            bpy.ops.object.duplicate()
+            obj2 = bpy.context.object
+
+            #Naming Convention
+            obj.name = obj.name.split('.')[0]
+            objNameSplit = obj.name.split('_')
+            if objNameSplit[-1][:3] == 'lod':
+                obj2.name = obj.name[:-4] + 'collider'
+            else:
+                obj2.name = obj.name + "_collider"
+            
+            colliderObjects.append(obj2)
+
+            bpy.ops.object.mode_set(mode = 'EDIT')
+
+            #Perform geometry operations
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.remove_doubles()
+            bpy.ops.mesh.decimate(ratio=self.decimate_ratio)
+            bpy.ops.mesh.dissolve_limited(angle_limit=self.disolve_angle)
+            bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+            bpy.ops.object.mode_set(mode = 'OBJECT')
+
+            bpy.ops.object.select_all(action='DESELECT')
+
+            #TODO: Delete all UV's and shape keys
+
+            obj.hide_set(True)
+
+        for obj in colliderObjects:
+            obj.select_set(True)
+
+
+        return {'FINISHED'}
+    
         #MODEL MESH
         #PREP FOR SHAPE KEY
         #SETUP SHAPE KEYS
 
-        #TODO: SET NORMALS
-        #TODO: REMOVE DOUBLES
+        #SET NORMALS
+        #REMOVE DOUBLES
         #SELECT SHARP EDGES -> BEVEL
         #SMART UV PROJECT
         #MARK SHARP EDGES (Not necessarily splitting every level)
             #ADD LOD
             #DECIMATE
         #SPLIT SHARP EDGES
-        

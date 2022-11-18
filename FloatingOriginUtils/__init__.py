@@ -59,8 +59,10 @@ class VIEW3D_PT_floating_origin_tools_mesh_management(bpy.types.Panel):
     bl_label = 'Mesh Management'
 
     def draw (self, context):
+        self.layout.operator('mesh.batch_uv_unwrap')
+        self.layout.operator('mesh.build_collider')
         self.layout.operator('mesh.copy_origin')
-        self.layout.operator('mesh.split_sharp_edges')
+        # self.layout.operator('mesh.split_sharp_edges')
 
 
 #######################_REGISTER_CLASSES_#######################
@@ -81,7 +83,9 @@ def register():
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_decimate_meshes)
         bpy.utils.register_class(mesh_management.MESH_OT_copy_origin)
-        bpy.utils.register_class(mesh_management.MESH_OT_split_sharp_edges)
+        # bpy.utils.register_class(mesh_management.MESH_OT_split_sharp_edges)
+        bpy.utils.register_class(mesh_management.MESH_OT_build_collider)
+        bpy.utils.register_class(mesh_management.MESH_OT_smart_uv_unwrap)
 
 def unregister():
         bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tools_shape_key)
@@ -100,4 +104,6 @@ def unregister():
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_decimate_meshes)
         bpy.utils.unregister_class(mesh_management.MESH_OT_copy_origin)
-        bpy.utils.unregister_class(mesh_management.MESH_OT_split_sharp_edges)
+        # bpy.utils.unregister_class(mesh_management.MESH_OT_split_sharp_edges)
+        bpy.utils.unregister_class(mesh_management.MESH_OT_build_collider)
+        bpy.utils.unregister_class(mesh_management.MESH_OT_smart_uv_unwrap)
