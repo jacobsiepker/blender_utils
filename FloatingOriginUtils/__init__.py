@@ -36,6 +36,7 @@ class VIEW3D_PT_floating_origin_tools_lod(bpy.types.Panel):
 
     def draw (self, context):
         self.layout.operator('mesh.add_lod')
+        self.layout.operator('mesh.decimate_meshes')
         self.layout.operator('mesh.select_lod')
         self.layout.operator('mesh.deselect_lod')
 
@@ -63,6 +64,7 @@ def register():
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_add_lod)
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_select_all_lod)
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
+        bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_decimate_meshes)
 
 def unregister():
         bpy.utils.unregister_class(VIEW3D_PT_floating_origin_tools_shape_key)
@@ -77,3 +79,4 @@ def unregister():
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_add_lod)
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_select_all_lod)
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
+        bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_decimate_meshes)

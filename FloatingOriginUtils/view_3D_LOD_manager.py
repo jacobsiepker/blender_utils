@@ -76,12 +76,44 @@ class MESH_OT_deselect_all_lod(bpy.types.Operator):
         for obj in context.selected_objects:
             selectionPrefix.append(obj.name[:-5])
 
+        activeObject = None
         for obj in bpy.data.objects:
             if obj.name[:-5] in selectionPrefix and obj.name[-5:].lower() == "_lod"+str(self.keepSelected):
                 obj.hide_set(False)
                 obj.select_set(True)
+                activeObject = obj
             elif obj.name[:-5] in selectionPrefix:
                 obj.hide_set(True)
                 obj.select_set(False)
+        bpy.context.view_layer.objects.active = activeObject
+        return {'FINISHED'}
+
+class MESH_OT_decimate_meshes(bpy.types.Operator):
+    bl_idname = 'mesh.decimate_meshes'
+    bl_label = 'Decimate All Meshes'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    ratio: bpy.props.FloatProperty(
+        name = "Ratio",
+        description = "The ratio of decimation"
+    )
+
+    def execute(self, context):
+        selectedObjects = []
+        for obj in context.selected_objects:
+            selectedObjects.append(obj)
+
+        for obj in selectedObjects:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            bpy.ops.object.mode_set(mode = 'EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.decimate(ratio=self.ratio)
+            bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        for obj in selectedObjects:
+            obj.select_set(True)
 
         return {'FINISHED'}

@@ -131,6 +131,9 @@ class MESH_OT_rename(bpy.types.Operator):
             nameEnding = ''
 
             for namePart in name_split:
+                if '.' in namePart:
+                    namePart = namePart.split('.')[0]
+
                 if namePart[:9].lower() == "modifiers":
                     nameEnding += "_modifiers"
                     
