@@ -114,6 +114,8 @@ class MESH_OT_rename(bpy.types.Operator):
         description = "Enable to keep previously established numbering scheme in form '_#_'"
     )
 
+    #TODO: Add option to not keep suffix
+
     def execute(self, context):
 
         selectionObjects = []

@@ -150,3 +150,40 @@ class MESH_OT_test_shape_key(bpy.types.Operator):
             obj.select_set(True)
 
         return {'FINISHED'}
+
+
+class MESH_OT_select_shape_key(bpy.types.Operator):
+    bl_idname = 'mesh.select_shape_key'
+    bl_label = 'Select Shape Keys'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    key_name: bpy.props.StringProperty(
+        name = "Shape Key Name",
+        description = "The name of the shape key that will be active for all selected objects"
+    )
+
+    #TODO: Should also select UV map
+
+    def execute(self, context):
+        
+        selectedKey = self.key_name
+        if selectedKey == '' or selectedKey == None:
+            selectedKey = "Basis"
+
+        selectionObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+        
+        for obj in selectionObjects:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            if obj.data.shape_keys != None:
+                index = obj.data.shape_keys.key_blocks.find(self.key_name)
+                obj.active_shape_key_index = index
+        
+        for obj in selectionObjects:
+            obj.select_set(True)
+
+        return {'FINISHED'}
