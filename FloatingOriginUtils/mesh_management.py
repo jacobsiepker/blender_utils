@@ -1,5 +1,6 @@
 import bpy
 
+#TODO: Mesh Cleanup
 class MESH_OT_cleanup(bpy.types.Operator):
     bl_idname = 'mesh.cleanup_mesh'
     bl_label = 'Apply basic operations to clean up the mesh'
@@ -62,6 +63,8 @@ class MESH_OT_copy_origin(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+#TODO: Bring to Active
 class MESH_OT_bring_to_active(bpy.types.Operator):
     bl_idname = 'mesh.bring_to_active'
     bl_label = 'Move each selected object to the active object'
@@ -161,6 +164,7 @@ class MESH_OT_remove_doubles(bpy.types.Operator):
 
         return {'FINISHED'}
 
+#TODO: Smart UV Unwrap
 class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
     bl_idname = 'mesh.smart_uv_unwrap'
     bl_label = 'Smart UV Unwrap'
@@ -175,9 +179,24 @@ class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
 
         for obj in selectionObjects:
             pass
-            #Enter edit mode, call smart UV unwrap on each object
+            #Enter edit mode, call smart UV project on each object
         
         for obj in selectionObjects:
             obj.set_select(True)
 
         return {'FINISHED'}
+
+
+        #MODEL MESH
+        #PREP FOR SHAPE KEY
+        #SETUP SHAPE KEYS
+
+        #TODO: SET NORMALS
+        #TODO: REMOVE DOUBLES
+        #SELECT SHARP EDGES -> BEVEL
+        #SMART UV PROJECT
+        #MARK SHARP EDGES (Not necessarily splitting every level)
+            #ADD LOD
+            #DECIMATE
+        #SPLIT SHARP EDGES
+        
