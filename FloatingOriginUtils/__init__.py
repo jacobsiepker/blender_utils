@@ -65,7 +65,6 @@ class VIEW3D_PT_floating_origin_tools_mesh_management(bpy.types.Panel):
         self.layout.operator('mesh.bring_to_active')
         # self.layout.operator('mesh.split_sharp_edges')
 
-
 #######################_REGISTER_CLASSES_#######################
 def register():
         bpy.utils.register_class(VIEW3D_PT_floating_origin_tools_shape_key)

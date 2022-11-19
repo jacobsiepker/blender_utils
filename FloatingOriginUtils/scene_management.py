@@ -1,4 +1,5 @@
 import bpy
+from . import fileNamingConventions
 
 class MESH_OT_export_fbx(bpy.types.Operator):
     bl_idname = 'mesh.export_fbx'
@@ -99,63 +100,79 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+#TODO: Make a seperate "update name" operator to change a name one param at a time
+
+#TODO: Make this function only create new names, you can choose to include each element and what it is, no option to keep existing name. Auto index
 class MESH_OT_rename(bpy.types.Operator):
     bl_idname = 'mesh.batch_rename'
     bl_label = 'Rename'
     bl_options = {'REGISTER', 'UNDO'}
+   # "OBJECT_NAME", "OBJECT_INDEX", "SET_INDEX", "INTERNAL", "COLLIDER", "MODIFIERS", "LOD", "SHAPE_KEY"
 
     newName: bpy.props.StringProperty(
         name = "New Object Name",
-        description = "The name that will be given to all objects, with appended index"
+        description = "The name that will be given to all objects, with appended index")
+    setIndex: bpy.props.IntProperty(
+        name = "Index of Set" #-1 for none
     )
-
-    keepNumbering: bpy.props.BoolProperty(
-        name = "Keep Numbering",
-        description = "Enable to keep previously established numbering scheme in form '_#_'"
-    )
+    lod: bpy.props.IntProperty(
+        name = "LOD Level" #-1 for none
+        )
+    disableAutoIndex: bpy.props.BoolProperty(
+        name = "Disable Auto Indexing")
+    internal: bpy.props.BoolProperty(
+        name = "Is Internal")
+    collider: bpy.props.BoolProperty(
+        name = "Is Collider")
+    modifiers: bpy.props.BoolProperty(
+        name = "Is Modifiers")
 
     #TODO: Add option to not keep suffix
 
     def execute(self, context):
-
         selectionObjects = []
 
         for obj in context.selected_objects:
             selectionObjects.append(obj)
 
-        i = 0
+        i = None
+        if not self.disableAutoIndex:
+            i = 0
+
         for obj in selectionObjects:
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
+            if self.setIndex < 0:
+                self.setIndex = None
 
-            name_split = obj.name.split("_")
-            nameEnding = ''
-
-            for namePart in name_split:
-                if '.' in namePart:
-                    namePart = namePart.split('.')[0]
-
-                if namePart[:9].lower() == "modifiers":
-                    nameEnding += "_modifiers"
-                    
-                elif namePart[:3].lower() == "lod":
-                    nameEnding += '_' + namePart
-                
-                elif self.keepNumbering:
-                    try:
-                        if -1 < eval(namePart) < 1000:
-                            nameEnding+= "_" + namePart
-                    except:
-                        pass
-            
-            #increment if last ending was different
-            if nameEnding == '' or not self.keepNumbering:
-                obj.name = self.newName + '_' + str(i) + nameEnding
-                i+=1
+            if self.lod < 0:
+                self.lod = None
             else:
-                obj.name = self.newName + nameEnding
+                self.internal = False
+                self.collider = False
+                self.modifers = False
+            if self.internal == False:
+                self.internal = None
+            else:
+                self.lod = False
+                self.collider = False
+                self.modifers = False
+            if self.collider == False:
+                self.collider = None
+            else:
+                self.internal = False
+                self.lod = False
+                self.modifers = False
+            if self.modifiers == False:
+                self.modifiers = None
+            else:
+                self.internal = False
+                self.collider = False
+                self.lod = False
 
+            obj.name = fileNamingConventions.updateName(objectName=self.newName, setIndex=self.setIndex, lodIndex=self.lod, objectIndex=i, internal=self.internal, collider=self.collider, modifiers=self.modifiers)
+            
+            if not self.disableAutoIndex:
+                i+=1
 
         for obj in selectionObjects:
             obj.select_set(True)

@@ -272,7 +272,7 @@ class MESH_OT_build_collider(bpy.types.Operator):
         return {'FINISHED'}
     
         #MODEL MESH
-        #PREP FOR SHAPE K.7EY
+        #PREP FOR SHAPE KEY
         #SETUP SHAPE KEYS
 
         #SET NORMALS
