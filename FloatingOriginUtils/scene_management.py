@@ -1,5 +1,5 @@
 import bpy
-from . import fileNamingConventions
+# from . import fileNamingConventions
 
 class MESH_OT_export_fbx(bpy.types.Operator):
     bl_idname = 'mesh.export_fbx'
@@ -97,61 +97,5 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 
             #Delete Temp Objects
             bpy.ops.object.delete(use_global=False, confirm=False)
-
-        return {'FINISHED'}
-
-
-#TODO: Make a seperate "update name" operator to change a name one param at a time
-
-#TODO: Make this function only create new names, you can choose to include each element and what it is, no option to keep existing name. Auto index
-class MESH_OT_batch_name(bpy.types.Operator):
-    bl_idname = 'mesh.batch_name'
-    bl_label = 'Name'
-    bl_options = {'REGISTER', 'UNDO'}
-   # "OBJECT_NAME", "OBJECT_INDEX", "SET_INDEX", "INTERNAL", "COLLIDER", "MODIFIERS", "LOD", "SHAPE_KEY"
-
-    newName: bpy.props.StringProperty(
-        name = "New Object Name",
-        description = "The name that will be given to all objects, with appended index")
-    setIndex: bpy.props.IntProperty(
-        name = "Index of Set" #-1 for none
-    )
-    lod: bpy.props.IntProperty(
-        name = "LOD Level" #-1 for none
-        )
-    disableAutoIndex: bpy.props.BoolProperty(
-        name = "Disable Auto Indexing")
-    internal: bpy.props.BoolProperty(
-        name = "Is Internal")
-    collider: bpy.props.BoolProperty(
-        name = "Is Collider")
-    modifiers: bpy.props.BoolProperty(
-        name = "Is Modifiers")
-
-    #TODO: auto indexing not appearing
-    def execute(self, context):
-        selectionObjects = []
-
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        i = False
-        if not self.disableAutoIndex:
-            i = 1
-
-        for obj in selectionObjects:
-            if self.setIndex < 0:
-                self.setIndex = False
-
-            if self.lod < 0:
-                self.lod = -1
-
-            obj.name = fileNamingConventions.updateName(objectName=self.newName, setIndex=self.setIndex, lodIndex=self.lod, objectIndex=i, internal=self.internal, collider=self.collider, modifiers=self.modifiers)
-            
-            if not self.disableAutoIndex:
-                i+=1
-
-        for obj in selectionObjects:
-            obj.select_set(True)
 
         return {'FINISHED'}

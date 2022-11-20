@@ -10,35 +10,35 @@ def updateName(objName='', objectName=None, objectIndex=None, setIndex=None, int
     
     if setIndex:
         newName += '_set' + str(setIndex)
-    else:
+    elif setIndex == None:
         fromName = getFromName(objName, "SET_INDEX")
         if fromName:
             newName += '_set' + str(fromName)
     
     if objectIndex:
         newName += '_' + str(objectIndex)
-    else:
+    elif objectIndex == None:
         fromName = getFromName(objName, "OBJECT_INDEX")
         if fromName:
             newName += '_' + str(fromName)
     
     if internal:
         newName += '_internal'
-    if internal==None:
+    elif internal==None:
         fromName = getFromName(objName, "INTERNAL")
         if fromName:
             newName += '_internal'
     
     if collider:
         newName += '_collider'
-    if collider==None:
+    elif collider==None:
         fromName = getFromName(objName, "COLLIDER")
         if fromName:
             newName += "_collider"
     
     if modifiers:
         newName += '_modifiers'
-    if modifiers==None:
+    elif modifiers==None:
         fromName = getFromName(objName, "MODIFIERS")
         if fromName:
             newName += "_modifiers"
@@ -46,7 +46,7 @@ def updateName(objName='', objectName=None, objectIndex=None, setIndex=None, int
     if lodIndex or lodIndex == 0:
         if (0 <= lodIndex < 10):
             newName += '_lod' + str(lodIndex)
-    else:
+    elif lodIndex == None:
         fromName = getFromName(objName, "LOD")
         if fromName and 0 <= fromName < 10:
             newName += '_lod' + str(fromName)
