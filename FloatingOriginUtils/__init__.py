@@ -49,7 +49,7 @@ class VIEW3D_PT_floating_origin_tools_scene_management(bpy.types.Panel):
     bl_label = 'Scene Management'
 
     def draw (self, context):
-        self.layout.operator('mesh.batch_rename')
+        self.layout.operator('mesh.batch_name')
         self.layout.operator('mesh.export_fbx')
 
 class VIEW3D_PT_floating_origin_tools_mesh_management(bpy.types.Panel):
@@ -77,7 +77,7 @@ def register():
         bpy.utils.register_class(view_3D_bulk_shape_key.MESH_OT_select_shape_key)
         bpy.utils.register_class(view_3D_bulk_shape_key.MESH_OT_test_shape_key)
         bpy.utils.register_class(scene_management.MESH_OT_export_fbx)
-        bpy.utils.register_class(scene_management.MESH_OT_rename)
+        bpy.utils.register_class(scene_management.MESH_OT_batch_name)
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_add_lod)
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_select_all_lod)
         bpy.utils.register_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)
@@ -99,7 +99,7 @@ def unregister():
         bpy.utils.unregister_class(view_3D_bulk_shape_key.MESH_OT_select_shape_key)
         bpy.utils.unregister_class(view_3D_bulk_shape_key.MESH_OT_test_shape_key)
         bpy.utils.unregister_class(scene_management.MESH_OT_export_fbx)
-        bpy.utils.unregister_class(scene_management.MESH_OT_rename)
+        bpy.utils.unregister_class(scene_management.MESH_OT_batch_name)
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_add_lod)
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_select_all_lod)
         bpy.utils.unregister_class(view_3D_LOD_manager.MESH_OT_deselect_all_lod)

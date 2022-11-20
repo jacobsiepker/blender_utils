@@ -104,9 +104,9 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 #TODO: Make a seperate "update name" operator to change a name one param at a time
 
 #TODO: Make this function only create new names, you can choose to include each element and what it is, no option to keep existing name. Auto index
-class MESH_OT_rename(bpy.types.Operator):
-    bl_idname = 'mesh.batch_rename'
-    bl_label = 'Rename'
+class MESH_OT_batch_name(bpy.types.Operator):
+    bl_idname = 'mesh.batch_name'
+    bl_label = 'Name'
     bl_options = {'REGISTER', 'UNDO'}
    # "OBJECT_NAME", "OBJECT_INDEX", "SET_INDEX", "INTERNAL", "COLLIDER", "MODIFIERS", "LOD", "SHAPE_KEY"
 
@@ -128,46 +128,23 @@ class MESH_OT_rename(bpy.types.Operator):
     modifiers: bpy.props.BoolProperty(
         name = "Is Modifiers")
 
-    #TODO: Add option to not keep suffix
-
+    #TODO: auto indexing not appearing
     def execute(self, context):
         selectionObjects = []
 
         for obj in context.selected_objects:
             selectionObjects.append(obj)
 
-        i = None
+        i = False
         if not self.disableAutoIndex:
-            i = 0
+            i = 1
 
         for obj in selectionObjects:
             if self.setIndex < 0:
-                self.setIndex = None
+                self.setIndex = False
 
             if self.lod < 0:
-                self.lod = None
-            else:
-                self.internal = False
-                self.collider = False
-                self.modifers = False
-            if self.internal == False:
-                self.internal = None
-            else:
-                self.lod = False
-                self.collider = False
-                self.modifers = False
-            if self.collider == False:
-                self.collider = None
-            else:
-                self.internal = False
-                self.lod = False
-                self.modifers = False
-            if self.modifiers == False:
-                self.modifiers = None
-            else:
-                self.internal = False
-                self.collider = False
-                self.lod = False
+                self.lod = -1
 
             obj.name = fileNamingConventions.updateName(objectName=self.newName, setIndex=self.setIndex, lodIndex=self.lod, objectIndex=i, internal=self.internal, collider=self.collider, modifiers=self.modifiers)
             

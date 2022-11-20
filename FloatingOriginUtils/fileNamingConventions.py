@@ -43,7 +43,7 @@ def updateName(objName='', objectName=None, objectIndex=None, setIndex=None, int
         if fromName:
             newName += "_modifiers"
     
-    if lodIndex:
+    if lodIndex or lodIndex == 0:
         if (0 <= lodIndex < 10):
             newName += '_lod' + str(lodIndex)
     else:
