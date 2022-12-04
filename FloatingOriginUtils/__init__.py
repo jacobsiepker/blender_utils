@@ -1,8 +1,8 @@
 bl_info = {
     "name": "Floating Origin Utils",
     "author": "Jacob Siepker",
-    "version": (0, 0, 1),
-    "blender": (3, 30, 0),
+    "version": (0, 1, 1),
+    "blender": (3, 3, 1),
     "location": "View3D",
     "description": "Custom tools for Floating Origin production",
     "warning": "Too good to handle",

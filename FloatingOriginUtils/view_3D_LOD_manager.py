@@ -152,7 +152,7 @@ class MESH_OT_deselect_all_lod(bpy.types.Operator):
 
 class MESH_OT_decimate_meshes(bpy.types.Operator):
     bl_idname = 'mesh.decimate_meshes'
-    bl_label = 'Decimate All Meshes'
+    bl_label = 'Decimate'
     bl_options = {'REGISTER', 'UNDO'}
 
     angle_limit: bpy.props.FloatProperty(

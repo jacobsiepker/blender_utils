@@ -163,28 +163,6 @@ class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#TODO: Set Normals
-class MESH_OT_set_normals(bpy.types.Operator):
-    bl_idname = 'mesh.set_normals'
-    bl_label = 'Set Normals'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        selectionObjects = []
-        #get active object
-        #get active object origin
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        for obj in selectionObjects:
-            pass
-            #Enter edit mode, call smart UV project on each object
-        
-        for obj in selectionObjects:
-            obj.set_select(True)
-
-        return {'FINISHED'}
-
 class MESH_OT_build_collider(bpy.types.Operator):
     bl_idname = 'mesh.build_collider'
     bl_label = 'Build Collider'
@@ -231,14 +209,12 @@ class MESH_OT_build_collider(bpy.types.Operator):
             #Perform geometry operations
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.mesh.remove_doubles()
-            bpy.ops.mesh.decimate(ratio=self.decimate_ratio)
             bpy.ops.mesh.dissolve_limited(angle_limit=self.disolve_angle)
+            bpy.ops.mesh.decimate(ratio=self.decimate_ratio)
             bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
             bpy.ops.object.mode_set(mode = 'OBJECT')
 
-            bpy.ops.object.select_all(action='DESELECT')
-
-            #TODO: Delete all UV's and shape keys
+            bpy.ops.object.select_all(action='DESELECT')            
 
             obj.hide_set(True)
 
