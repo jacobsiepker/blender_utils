@@ -80,6 +80,7 @@ class MESH_OT_update_object_name(bpy.types.Operator):
 
         return {'FINISHED'}
 
+#TODO: Changing set index destorys tags following it
 class MESH_OT_update_set_index(bpy.types.Operator):
     bl_idname = 'mesh.update_set_index'
     bl_label = 'Set Index'

@@ -77,6 +77,17 @@ class MESH_OT_export_fbx(bpy.types.Operator):
                 #Currently not implemented, not necessary
                 #Could save some object disc size
 
+                bpy.ops.object.select_all(action='DESELECT')
+                obj2.select_set(True)
+
+                bpy.ops.object.editmode_toggle()
+                bpy.ops.mesh.select_all(action='SELECT')
+                bpy.ops.mesh.quads_convert_to_tris() 
+                bpy.ops.object.editmode_toggle()
+
+                #shade smooth
+                bpy.ops.object.shade_smooth()
+
                 #Bring to Origin, Apply Transforms
                 obj2.location[0] = 0
                 obj2.location[1] = 0

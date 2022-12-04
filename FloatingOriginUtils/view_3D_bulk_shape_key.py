@@ -26,6 +26,15 @@ class MESH_OT_prep_for_shapekey(bpy.types.Operator):
             obj.name = obj.name[:-4]
             obj.shape_key_add(from_mix=False, name="Basis")
 
+            #Merge verticies by distance
+            bpy.ops.object.mode_set(mode = 'EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.remove_doubles(threshold=0.0001)
+            bpy.ops.object.mode_set(mode = 'OBJECT')
+
+            #Shade flat
+            bpy.ops.object.shade_flat()
+
             bpy.context.view_layer.objects.active = obj
             bpy.context.object.data.uv_layers.active.name = "Basis"
             obj.select_set(True)
@@ -61,10 +70,6 @@ class MESH_OT_add_shape_key(bpy.types.Operator):
             bpy.ops.object.select_all(action='DESELECT')
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
-
-            bpy.ops.mesh.uv_texture_add()
-            bpy.context.object.data.uv_layers.active.name = shapeKeyName
-
 
         for obj in selectionObjects:
             obj.select_set(True)
@@ -140,7 +145,7 @@ class MESH_OT_test_shape_key(bpy.types.Operator):
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
             if obj.data.shape_keys != None:
-                index = obj.data.shape_keys.key_blocks.find(self.key_name)  ##THROWS ERROR WHEN NO SHAPE KEY EXISTS ON OBJECT
+                index = obj.data.shape_keys.key_blocks.find(self.key_name)
                 obj.active_shape_key_index = index
                 if obj.active_shape_key != None:
                     obj.active_shape_key.value = self.value
@@ -162,8 +167,6 @@ class MESH_OT_select_shape_key(bpy.types.Operator):
         description = "The name of the shape key that will be active for all selected objects"
     )
 
-    #TODO: Should also select UV map
-
     def execute(self, context):
         
         selectedKey = self.key_name
@@ -183,6 +186,30 @@ class MESH_OT_select_shape_key(bpy.types.Operator):
                 index = obj.data.shape_keys.key_blocks.find(self.key_name)
                 obj.active_shape_key_index = index
         
+        for obj in selectionObjects:
+            obj.select_set(True)
+
+        return {'FINISHED'}
+
+class MESH_OT_reset_all_shape_keys(bpy.types.Operator):
+    bl_idname = 'mesh.reset_all_shape_keys'
+    bl_label = 'Reset All Shape Keys'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        selectionObjects = []
+        for obj in context.selected_objects:
+            selectionObjects.append(obj)
+        
+        for obj in selectionObjects:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            if obj.data.shape_keys != None:
+                for key in obj.data.shape_keys.key_blocks:
+                    key.value = 0
+
         for obj in selectionObjects:
             obj.select_set(True)
 

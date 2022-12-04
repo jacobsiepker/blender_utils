@@ -1,23 +1,48 @@
 import bpy
+import bmesh
 
-#TODO: Mesh Cleanup
-class MESH_OT_cleanup(bpy.types.Operator):
-    bl_idname = 'mesh.cleanup_mesh'
-    bl_label = 'Apply basic operations to clean up the mesh'
+
+
+class MESH_OT_batch_cleanup(bpy.types.Operator):
+    bl_idname = 'mesh.batch_cleanup'
+    bl_label = 'Cleanup'
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        selectionObjects = []
         for obj in context.selected_objects:
-            selectionObjects.append(obj)
+            if obj.type == 'MESH':
+                obj.select_set(True)
+                bpy.context.view_layer.objects.active = obj
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.select_all(action='SELECT')
 
-        for obj in selectionObjects:
-            pass
-        
-        for obj in selectionObjects:
-            obj.set_select(True)
+                bpy.ops.mesh.remove_doubles()
+
+                bpy.ops.mesh.select_all(action='SELECT')
+                bpy.ops.mesh.normals_make_consistent(inside=False)
+
+                #deselect all edges
+                bpy.ops.mesh.select_all(action='DESELECT')
+                #select edges marked sharp
+                #for each edge, if it is marked sharp, select it. Using bmesh.
+                bm = bmesh.from_edit_mesh(obj.data)
+                for e in bm.edges:
+                    if not e.smooth:
+                        e.select = True
+                bmesh.update_edit_mesh(obj.data)
+                
+                #split edges
+                bpy.ops.mesh.edge_split()
+
+                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.ops.object.shade_smooth()
+                bpy.ops.object.select_all(action='DESELECT')
+            else:
+                obj.select_set(False)
 
         return {'FINISHED'}
+
+
 
 class MESH_OT_copy_origin(bpy.types.Operator):
     bl_idname = 'mesh.copy_origin'
@@ -83,82 +108,34 @@ class MESH_OT_bring_to_active(bpy.types.Operator):
         return {'FINISHED'}
 
 
+# split all edges marked sharp without a modifier.
+# Let the use also input a value for the angle cuttoff.
+# Affects all selected objects
 class MESH_OT_split_sharp_edges(bpy.types.Operator):
-    bl_idname = 'mesh.split_sharp_edges'
-    bl_label = 'Split Sharp Edges'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    selectByAngle: bpy.props.BoolProperty(
-        name = "Select By Angle",
-        description = "Enable to keep previously established numbering scheme in form '_#_'"
-    )
-
-    angleCutoff: bpy.props.FloatProperty(
-        name = "Angle Cutoff",
-        description = "The minimum angle that will be split"
-    )
+    pass
 
 
-    def execute(self, context):
-        #Get selected objects
-        selectedObjects = []
-        activeObj = bpy.context.view_layer.objects.active
-        for obj in context.selected_objects:
-            selectedObjects.append(obj)
 
-        for obj in selectedObjects:
-            #Set object selection
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-            
-            bpy.ops.object.mode_set(mode = 'EDIT')
-            bpy.ops.mesh.select_all(action='DESELECT')
-            bpy.ops.object.mode_set(mode = 'OBJECT')
+# class MESH_OT_remove_doubles(bpy.types.Operator):
+#     bl_idname = 'mesh.remove_doubles'
+#     bl_label = 'Remove Doubles'
+#     bl_options = {'REGISTER', 'UNDO'}
 
-            #TODO: Will not select just sharp edges when trying to deselect prev selection
+#     def execute(self, context):
+#         selectionObjects = []
+#         #get active object
+#         #get active object origin
+#         for obj in context.selected_objects:
+#             selectionObjects.append(obj)
 
-            for e in obj.data.edges:
-                # e.select = False
-                if e.use_edge_sharp:
-                    e.select = True
-
-            bpy.ops.object.mode_set(mode = 'EDIT')
-            #TODO: Fix the following code block - Sharp Edges are not selected by angle
-            if self.selectByAngle:
-                bpy.ops.mesh.edges_select_sharp(sharpness=self.angleCutoff)
-            
-            #TODO: Edge split does not succeed or throw error
-            bpy.ops.mesh.edge_split()
-            bpy.ops.object.mode_set(mode = 'OBJECT')
-
-        for obj in selectedObjects:
-            obj.select_set(True)
-        bpy.context.view_layer.objects.active = activeObj
-
-        return {'FINISHED'}
-
-
-class MESH_OT_remove_doubles(bpy.types.Operator):
-    bl_idname = 'mesh.remove_doubles'
-    bl_label = 'Remove Doubles'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        selectionObjects = []
-        #get active object
-        #get active object origin
-        for obj in context.selected_objects:
-            selectionObjects.append(obj)
-
-        for obj in selectionObjects:
-            pass
-            #move objects to this object
+#         for obj in selectionObjects:
+#             pass
+#             #move objects to this object
         
-        for obj in selectionObjects:
-            obj.set_select(True)
+#         for obj in selectionObjects:
+#             obj.set_select(True)
 
-        return {'FINISHED'}
+#         return {'FINISHED'}
 
 class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
     bl_idname = 'mesh.batch_uv_unwrap'

@@ -18,6 +18,15 @@ class MESH_OT_add_lod(bpy.types.Operator):
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
 
+            #Merge verticies by distance
+            bpy.ops.object.mode_set(mode = 'EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.remove_doubles(threshold=0.0001)
+            bpy.ops.object.mode_set(mode = 'OBJECT')
+
+            #Shade flat
+            bpy.ops.object.shade_flat()
+
             #Duplicate Object, Rename Copy
             bpy.ops.object.duplicate()
             obj2 = bpy.context.object
@@ -34,8 +43,6 @@ class MESH_OT_add_lod(bpy.types.Operator):
             lodObjects.append(obj2)
 
             bpy.ops.object.select_all(action='DESELECT')
-
-            #Could add LOD levels to a collection with the same object name here
 
             obj.hide_set(True)
 
@@ -148,9 +155,18 @@ class MESH_OT_decimate_meshes(bpy.types.Operator):
     bl_label = 'Decimate All Meshes'
     bl_options = {'REGISTER', 'UNDO'}
 
+    angle_limit: bpy.props.FloatProperty(
+        name = "Angle Limit",
+        description = "Angle limit for limited dissolve",
+        default = 0.523599,
+        min = 0.0
+    )
+
     ratio: bpy.props.FloatProperty(
         name = "Ratio",
-        description = "The ratio of decimation"
+        description = "The ratio of decimation",
+        min = 0.0,
+        max = 1.0
     )
 
     def execute(self, context):
@@ -165,6 +181,7 @@ class MESH_OT_decimate_meshes(bpy.types.Operator):
 
             bpy.ops.object.mode_set(mode = 'EDIT')
             bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.dissolve_limited(angle_limit=self.angle_limit)
             bpy.ops.mesh.decimate(ratio=self.ratio)
             bpy.ops.object.mode_set(mode = 'OBJECT')
 
