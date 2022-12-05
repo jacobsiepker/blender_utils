@@ -1,8 +1,6 @@
 import bpy
 import bmesh
 
-
-
 class MESH_OT_batch_cleanup(bpy.types.Operator):
     bl_idname = 'mesh.batch_cleanup'
     bl_label = 'Cleanup'
@@ -41,8 +39,6 @@ class MESH_OT_batch_cleanup(bpy.types.Operator):
                 obj.select_set(False)
 
         return {'FINISHED'}
-
-
 
 class MESH_OT_copy_origin(bpy.types.Operator):
     bl_idname = 'mesh.copy_origin'
@@ -107,36 +103,6 @@ class MESH_OT_bring_to_active(bpy.types.Operator):
         
         return {'FINISHED'}
 
-
-# split all edges marked sharp without a modifier.
-# Let the use also input a value for the angle cuttoff.
-# Affects all selected objects
-class MESH_OT_split_sharp_edges(bpy.types.Operator):
-    pass
-
-
-
-# class MESH_OT_remove_doubles(bpy.types.Operator):
-#     bl_idname = 'mesh.remove_doubles'
-#     bl_label = 'Remove Doubles'
-#     bl_options = {'REGISTER', 'UNDO'}
-
-#     def execute(self, context):
-#         selectionObjects = []
-#         #get active object
-#         #get active object origin
-#         for obj in context.selected_objects:
-#             selectionObjects.append(obj)
-
-#         for obj in selectionObjects:
-#             pass
-#             #move objects to this object
-        
-#         for obj in selectionObjects:
-#             obj.set_select(True)
-
-#         return {'FINISHED'}
-
 class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
     bl_idname = 'mesh.batch_uv_unwrap'
     bl_label = 'Smart UV Unwrap'
@@ -153,6 +119,10 @@ class MESH_OT_smart_uv_unwrap(bpy.types.Operator):
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
 
+            #Apply scale and rotation before unwrapping
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+            
+            #Unwrap
             bpy.ops.object.mode_set(mode = 'EDIT')
             bpy.ops.uv.smart_project(island_margin=0.005)
             bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -223,16 +193,3 @@ class MESH_OT_build_collider(bpy.types.Operator):
 
 
         return {'FINISHED'}
-    
-        #MODEL MESH
-        #PREP FOR SHAPE KEY
-        #SETUP SHAPE KEYS
-
-        #SET NORMALS
-        #REMOVE DOUBLES
-        #SELECT SHARP EDGES -> BEVEL
-        #SMART UV PROJECT
-        #MARK SHARP EDGES (Not necessarily splitting every level)
-            #ADD LOD
-            #DECIMATE
-        #SPLIT SHARP EDGES
