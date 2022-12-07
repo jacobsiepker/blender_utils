@@ -1,7 +1,5 @@
 import bpy
 
-# from . import fileNamingConventions
-
 
 class MESH_OT_export_fbx(bpy.types.Operator):
     bl_idname = "mesh.export_fbx"
@@ -74,6 +72,11 @@ class MESH_OT_export_fbx(bpy.types.Operator):
                 else:
                     obj2.name = f"{obj.name}_Basis"
 
+                bpy.ops.object.editmode_toggle()
+                bpy.ops.mesh.select_all(action="SELECT")
+                bpy.ops.mesh.quads_convert_to_tris()
+                bpy.ops.object.editmode_toggle()
+
                 # Remove Shape Keys that Do Not Match
                 for shapeKeyRemove in keyList:
                     if shapeKeyRemove != keyName:
@@ -83,11 +86,6 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 
                 bpy.ops.object.select_all(action="DESELECT")
                 obj2.select_set(True)
-
-                bpy.ops.object.editmode_toggle()
-                bpy.ops.mesh.select_all(action="SELECT")
-                bpy.ops.mesh.quads_convert_to_tris()
-                bpy.ops.object.editmode_toggle()
 
                 # Set Normals to Smooth
                 bpy.ops.object.shade_smooth()
@@ -112,26 +110,79 @@ class MESH_OT_export_fbx(bpy.types.Operator):
             tempObj.select_set(True)
 
         # Set output file name
-        fileName = obj.name.split('_')[0]
-        #append parts from the original name
+        fileName = obj.name.split("_")[0]
+        # append parts from the original name
         for namePart in obj.name.split("_")[1:]:
-            #if namePart starts with s or i followed by a number, add to the file name
+            # if namePart starts with s or i followed by a number, add to the file name
             if namePart[0] == "s" or namePart[0] == "i":
                 if namePart[1].isdigit():
                     fileName += "_" + namePart
 
-        outputFile = filePath + fileName + ".fbx"
+        outputFileFBX = filePath + fileName + ".fbx"
+        outputFileOBJ = filePath + fileName + ".obj"
+        outputFileGLTF = filePath + fileName + ".gltf"
 
         # Export selection as FBX for unity
         # bpy.ops.export_scene.fbx(filepath=outputFile, \
         #  use_mesh_edges=True, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'}, use_mesh_modifiers=True, use_tspace=True, use_custom_props=True, add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=False, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0, path_mode='AUTO', embed_textures=False, batch_mode='OFF', use_batch_own_dir=True, use_metadata=True, axis_forward='-Z', axis_up='Y')
 
         bpy.ops.export_scene.fbx(
-            filepath=outputFile,
+            filepath=outputFileFBX,
             use_mesh_edges=True,
             use_selection=True,
-            object_types={"ARMATURE", "EMPTY", "MESH"},
+            object_types={"MESH"},
+            mesh_smooth_type="OFF"
         )
+
+        # export as gltf. Use selection and keep vertex ordering the same
+        bpy.ops.export_scene.gltf(
+            filepath=outputFileGLTF, export_format="GLTF_SEPARATE"
+        )
+
+        # export as obj so that each object is a separate mesh
+        bpy.ops.export_scene.obj(
+            filepath=outputFileOBJ,
+            use_selection=True,
+            use_mesh_modifiers=True,
+            use_edges=True,
+            use_smooth_groups=False,
+            use_smooth_groups_bitflags=False,
+            use_normals=True,
+            use_uvs=True,
+            use_materials=False,
+            use_triangles=True,
+            use_nurbs=False,
+            use_vertex_groups=False,
+            use_blen_objects=True,
+            group_by_object=False,
+            group_by_material=False,
+            keep_vertex_order=True,
+            global_scale=1,
+            path_mode="AUTO",
+        )
+
+        # bpy.ops.export_scene.obj(
+        #     filepath=outputFileOBJ,
+        #     use_selection=True,
+        #     use_mesh_modifiers=False,
+        #     use_edges=True,
+        #     use_smooth_groups=True,
+        #     use_smooth_groups_bitflags=False,
+        #     use_normals=True,
+        #     use_uvs=True,
+        #     use_materials=True,
+        #     use_triangles=True,
+        #     use_nurbs=False,
+        #     use_vertex_groups=False,
+        #     use_blen_objects=True,
+        #     group_by_object=True,
+        #     group_by_material=True,
+        #     keep_vertex_order=True,
+        #     global_scale=1,
+        #     path_mode="AUTO",
+        #     axis_forward="-Z",
+        #     axis_up="Y",
+        # )
 
         # Export selection as FBX keeping the vertex count and order deterministic
         # bpy.ops.export_scene.fbx(filepath=outputFile, use_mesh_edges=True, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'}, use_mesh_modifiers=True, use_tspace=True, use_custom_props=True, add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=False, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0, path_mode='AUTO', embed_textures=False, batch_mode='OFF', use_batch_own_dir=True, use_metadata=True, axis_forward='-Z', axis_up='Y')
