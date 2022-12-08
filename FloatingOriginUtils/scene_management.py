@@ -30,6 +30,7 @@ class MESH_OT_export_fbx(bpy.types.Operator):
         # while len(selectionObjects) > 0:
 
         tempObjects = []
+        refObjects = []
         # Separate shape keys for each object
         # Adds shape key to tempObjects
         for obj in exportObjects:
@@ -44,25 +45,51 @@ class MESH_OT_export_fbx(bpy.types.Operator):
             i = 0
             keyList = []
 
+            # Duplicate Object, Add to refObjects
+            bpy.ops.object.select_all(action="DESELECT")
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.duplicate()
+            refObj = bpy.context.object
+            refObj.name = f"{obj.name}_ref"
+            refObjects.append(refObj)
+
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action="SELECT")
+            bpy.ops.mesh.quads_convert_to_tris()
+            bpy.ops.object.editmode_toggle()
+
+            # Set Normals to Smooth
+            bpy.ops.object.shade_smooth()
+
+            # Bring to Origin
+            refObj.location[0] = 0
+            refObj.location[1] = 0
+            refObj.location[2] = 0
+
+            # Apply Transformations
+            bpy.ops.object.transform_apply( location=True, rotation=True, scale=True )
+            bpy.ops.object.convert(target="MESH", keep_original=False)
+
             # Get list of all shape keys
             while not stopIter:
-                obj.active_shape_key_index = i
-                if obj.active_shape_key == None:
+                refObj.active_shape_key_index = i
+                if refObj.active_shape_key == None:
                     stopIter = True
                 else:
-                    keyList.append(obj.active_shape_key.name)
+                    keyList.append(refObj.active_shape_key.name)
                     i += 1
 
             # Iterate through shape keys
             for keyName in keyList:
                 # Set current key as active
-                index = obj.data.shape_keys.key_blocks.find(keyName)
-                obj.active_shape_key_index = index
+                index = refObj.data.shape_keys.key_blocks.find(keyName)
+                refObj.active_shape_key_index = index
 
-                # Set obj as Selected and Active
+                # Set refObj as Selected and Active
                 bpy.ops.object.select_all(action="DESELECT")
-                obj.select_set(True)
-                bpy.context.view_layer.objects.active = obj
+                refObj.select_set(True)
+                bpy.context.view_layer.objects.active = refObj
 
                 # Duplicate Object, Rename Copy
                 bpy.ops.object.duplicate()
@@ -71,11 +98,6 @@ class MESH_OT_export_fbx(bpy.types.Operator):
                     obj2.name = f"{obj.name}_blend_{keyName}"
                 else:
                     obj2.name = f"{obj.name}_Basis"
-
-                bpy.ops.object.editmode_toggle()
-                bpy.ops.mesh.select_all(action="SELECT")
-                bpy.ops.mesh.quads_convert_to_tris()
-                bpy.ops.object.editmode_toggle()
 
                 # Remove Shape Keys that Do Not Match
                 for shapeKeyRemove in keyList:
@@ -87,21 +109,6 @@ class MESH_OT_export_fbx(bpy.types.Operator):
                 bpy.ops.object.select_all(action="DESELECT")
                 obj2.select_set(True)
 
-                # Set Normals to Smooth
-                bpy.ops.object.shade_smooth()
-
-                # Bring to Origin
-                obj2.location[0] = 0
-                obj2.location[1] = 0
-                obj2.location[2] = 0
-
-                # Apply Transformations
-                with bpy.context.temp_override(active_object=obj2):
-                    bpy.ops.object.transform_apply(
-                        location=True, rotation=True, scale=True
-                    )
-                    bpy.ops.object.convert(target="MESH", keep_original=False)
-
                 tempObjects.append(obj2)
 
         # Select all temp objects
@@ -111,87 +118,30 @@ class MESH_OT_export_fbx(bpy.types.Operator):
 
         # Set output file name
         fileName = obj.name.split("_")[0]
-        # append parts from the original name
+        # append set and item index from the original name
         for namePart in obj.name.split("_")[1:]:
-            # if namePart starts with s or i followed by a number, add to the file name
             if namePart[0] == "s" or namePart[0] == "i":
                 if namePart[1].isdigit():
                     fileName += "_" + namePart
 
+
         outputFileFBX = filePath + fileName + ".fbx"
-        outputFileOBJ = filePath + fileName + ".obj"
-        outputFileGLTF = filePath + fileName + ".gltf"
 
-        # Export selection as FBX for unity
-        # bpy.ops.export_scene.fbx(filepath=outputFile, \
-        #  use_mesh_edges=True, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'}, use_mesh_modifiers=True, use_tspace=True, use_custom_props=True, add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=False, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0, path_mode='AUTO', embed_textures=False, batch_mode='OFF', use_batch_own_dir=True, use_metadata=True, axis_forward='-Z', axis_up='Y')
-
-        bpy.ops.export_scene.fbx(
-            filepath=outputFileFBX,
-            use_mesh_edges=True,
-            use_selection=True,
-            object_types={"MESH"},
-            mesh_smooth_type="OFF"
-        )
-
-        # export as gltf. Use selection and keep vertex ordering the same
-        bpy.ops.export_scene.gltf(
-            filepath=outputFileGLTF, export_format="GLTF_SEPARATE"
-        )
-
-        # export as obj so that each object is a separate mesh
-        bpy.ops.export_scene.obj(
-            filepath=outputFileOBJ,
-            use_selection=True,
-            use_mesh_modifiers=True,
-            use_edges=True,
-            use_smooth_groups=False,
-            use_smooth_groups_bitflags=False,
-            use_normals=True,
-            use_uvs=True,
-            use_materials=False,
-            use_triangles=True,
-            use_nurbs=False,
-            use_vertex_groups=False,
-            use_blen_objects=True,
-            group_by_object=False,
-            group_by_material=False,
-            keep_vertex_order=True,
-            global_scale=1,
-            path_mode="AUTO",
-        )
-
-        # bpy.ops.export_scene.obj(
-        #     filepath=outputFileOBJ,
-        #     use_selection=True,
-        #     use_mesh_modifiers=False,
-        #     use_edges=True,
-        #     use_smooth_groups=True,
-        #     use_smooth_groups_bitflags=False,
-        #     use_normals=True,
-        #     use_uvs=True,
-        #     use_materials=True,
-        #     use_triangles=True,
-        #     use_nurbs=False,
-        #     use_vertex_groups=False,
-        #     use_blen_objects=True,
-        #     group_by_object=True,
-        #     group_by_material=True,
-        #     keep_vertex_order=True,
-        #     global_scale=1,
-        #     path_mode="AUTO",
-        #     axis_forward="-Z",
-        #     axis_up="Y",
-        # )
-
-        # Export selection as FBX keeping the vertex count and order deterministic
-        # bpy.ops.export_scene.fbx(filepath=outputFile, use_mesh_edges=True, use_selection=True, object_types={'ARMATURE', 'EMPTY', 'MESH'}, use_mesh_modifiers=True, use_tspace=True, use_custom_props=True, add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=False, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0, path_mode='AUTO', embed_textures=False, batch_mode='OFF', use_batch_own_dir=True, use_metadata=True, axis_forward='-Z', axis_up='Y')
+        bpy.ops.export_scene.fbx( filepath=outputFileFBX, use_mesh_edges=True, use_selection=True, object_types={"ARMATURE", "EMPTY", "MESH"} )
 
         # Delete Temp Objects
         for tempObj in tempObjects:
             bpy.ops.object.select_all(action="DESELECT")
             bpy.context.view_layer.objects.active = tempObj
             tempObj.select_set(True)
+
+            bpy.ops.object.delete(use_global=False, confirm=False)
+        
+        # Delete Ref Objects
+        for refObj in refObjects:
+            bpy.ops.object.select_all(action="DESELECT")
+            bpy.context.view_layer.objects.active = refObj
+            refObj.select_set(True)
 
             bpy.ops.object.delete(use_global=False, confirm=False)
 
